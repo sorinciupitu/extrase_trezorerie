@@ -1,17 +1,26 @@
-version: '3.8'
 
 services:
   backend:
     build: ./backend
     ports:
       - "${BACKEND_PORT:-5001}:5001"
+    environment:
+      - DB_FILE=/app/db/trezorerie.db
     volumes:
       - ./backend/uploads:/app/uploads
-      - ./backend/trezorerie.db:/app/trezorerie.db
+      - ./backend/db:/app/db
     restart: always
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:5001/health').getcode()==200 else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   frontend:
     build: .
+    depends_on:
+      backend:
+        condition: service_healthy
     ports:
       - "${FRONTEND_PORT:-3005}:80"
     restart: always

@@ -12,9 +12,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 CORS(app)
 
-DB_FILE = "trezorerie.db"
+DB_FILE = os.getenv('DB_FILE', 'trezorerie.db')
 UPLOAD_FOLDER = "uploads"
 
+db_dir = os.path.dirname(DB_FILE)
+if db_dir and not os.path.exists(db_dir):
+    os.makedirs(db_dir, exist_ok=True)
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
