@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const API_URL = 'http://127.0.0.1:5001';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // --- API HELPER ---
 const apiCall = async (endpoint, method = 'GET', body = null, token = null) => {

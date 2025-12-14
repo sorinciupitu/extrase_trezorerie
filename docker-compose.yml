@@ -4,7 +4,7 @@ services:
   backend:
     build: ./backend
     ports:
-      - "5001:5001"
+      - "${BACKEND_PORT:-5001}:5001"
     volumes:
       - ./backend/uploads:/app/uploads
       - ./backend/trezorerie.db:/app/trezorerie.db
@@ -13,7 +13,7 @@ services:
   frontend:
     build: .
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-3005}:80"
     depends_on:
       - backend
     restart: always

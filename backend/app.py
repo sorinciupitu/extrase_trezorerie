@@ -248,13 +248,15 @@ def parse_trezorerie_visual(filepath, filename, user_id):
 
 @app.route('/login', methods=['POST'])
 def login():
-    data = request.json
+    data = request.json or {}
+    username = str(data.get('username', '')).strip()
+    password = str(data.get('password', '')).strip()
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT id, password, role FROM users WHERE username=?", (data['username'],))
+    c.execute("SELECT id, password, role FROM users WHERE username=?", (username,))
     user = c.fetchone()
-    
-    if user and check_password_hash(user[1], data['password']):
+    ok = bool(user) and check_password_hash(user[1], password)
+    if ok:
         # Generate token
         token = str(uuid.uuid4())
         c.execute("INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)", 
