@@ -246,6 +246,10 @@ def parse_trezorerie_visual(filepath, filename, user_id):
 
 # --- AUTH ENDPOINTS ---
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.json or {}
