@@ -139,6 +139,19 @@ def update_balance_smart(user_id, new_balance, new_date_iso):
     conn.commit()
     conn.close()
 
+def update_totals_smart(user_id, debit_total, credit_total, new_date_iso):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    c.execute("SELECT value FROM meta WHERE user_id=? AND key='totals_date'", (user_id,))
+    res = c.fetchone()
+    current_date_iso = res[0] if res else "1900-01-01"
+    if new_date_iso >= current_date_iso:
+        c.execute("INSERT OR REPLACE INTO meta (user_id, key, value) VALUES (?, 'total_debit', ?)", (user_id, str(debit_total)))
+        c.execute("INSERT OR REPLACE INTO meta (user_id, key, value) VALUES (?, 'total_credit', ?)", (user_id, str(credit_total)))
+        c.execute("INSERT OR REPLACE INTO meta (user_id, key, value) VALUES (?, 'totals_date', ?)", (user_id, new_date_iso))
+    conn.commit()
+    conn.close()
+
 # --- PARSER ---
 def parse_trezorerie_visual(filepath, filename, user_id):
     transactions = []
@@ -187,6 +200,21 @@ def parse_trezorerie_visual(filepath, filename, user_id):
                             if val > 0: potential_nums.append(val)
                     if potential_nums:
                         update_balance_smart(user_id, potential_nums[-1], file_date_iso)
+
+                if "Total sume" in line_text:
+                    numeric_tokens = []
+                    for w in row:
+                        txt = w['text'].replace('=','').strip()
+                        if re.search(r'\d', txt) and ('.' in txt or ',' in txt) and len(txt) < 15:
+                            if txt not in line_text:
+                                numeric_tokens.append({'val': parse_amount(txt), 'x': w['x0'], 'text': txt})
+                    valid_amounts = [n for n in numeric_tokens if n['val'] >= 0]
+                    if valid_amounts:
+                        left_vals = [n for n in valid_amounts if n['x'] < split_x]
+                        right_vals = [n for n in valid_amounts if n['x'] >= split_x]
+                        debit_total = left_vals[-1]['val'] if left_vals else 0.0
+                        credit_total = right_vals[-1]['val'] if right_vals else 0.0
+                        update_totals_smart(user_id, debit_total, credit_total, file_date_iso)
 
                 match_date = re.search(r'(\d{2}\s*\.\s*\d{2}\s*\.\s*\d{4})', line_text)
                 if match_date:
@@ -416,10 +444,19 @@ def get_transactions():
     res_exp = c.fetchone()[0]
     total_expense = res_exp if res_exp else 0.00
 
+    c.execute("SELECT value FROM meta WHERE user_id=? AND key='total_debit'", (user_id,))
+    res_td = c.fetchone()
+    total_debit_meta = float(res_td['value']) if res_td else 0.00
+    c.execute("SELECT value FROM meta WHERE user_id=? AND key='total_credit'", (user_id,))
+    res_tc = c.fetchone()
+    total_credit_meta = float(res_tc['value']) if res_tc else 0.00
+
     conn.close()
     return jsonify({
         "transactions": transactions, 
         "balance": balance,
+        "total_debit": total_debit_meta,
+        "total_credit": total_credit_meta,
         "total_income": total_income,
         "total_expense": total_expense
     })

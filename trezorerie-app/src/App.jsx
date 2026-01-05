@@ -167,6 +167,8 @@ const LoginPage = ({ onLogin }) => {
 const DashboardContent = ({ token, userData }) => {
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState(0); 
+  const [totalDebitMeta, setTotalDebitMeta] = useState(0);
+  const [totalCreditMeta, setTotalCreditMeta] = useState(0);
   const [uploadQueue, setUploadQueue] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const chartRef = useRef(null);
@@ -178,6 +180,8 @@ const DashboardContent = ({ token, userData }) => {
     if (!data.transactions) return;
     setTransactions(data.transactions);
     setBalance(data.balance); 
+    setTotalDebitMeta(data.total_debit || 0);
+    setTotalCreditMeta(data.total_credit || 0);
   }, [token]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -328,6 +332,10 @@ const DashboardContent = ({ token, userData }) => {
           </div>
         </div>
         <div className="flex flex-col gap-4 min-w-0">
+           <div className="grid grid-cols-2 gap-4 min-w-0">
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800 text-green-800 dark:text-green-400 font-bold">Total sume CREDIT {totalCreditMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
+              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800 text-red-800 dark:text-red-400 font-bold">Total sume DEBIT {totalDebitMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
+           </div>
            <div className="grid grid-cols-2 gap-4 min-w-0">
               <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800 text-green-800 dark:text-green-400 font-bold">+{displayTotals.inc.toLocaleString()} Lei</div>
               <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800 text-red-800 dark:text-red-400 font-bold">-{displayTotals.exp.toLocaleString()} Lei</div>
