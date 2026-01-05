@@ -169,6 +169,8 @@ const DashboardContent = ({ token, userData }) => {
   const [balance, setBalance] = useState(0); 
   const [totalDebitMeta, setTotalDebitMeta] = useState(0);
   const [totalCreditMeta, setTotalCreditMeta] = useState(0);
+  const [rulajDebitMeta, setRulajDebitMeta] = useState(0);
+  const [rulajCreditMeta, setRulajCreditMeta] = useState(0);
   const [uploadQueue, setUploadQueue] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const chartRef = useRef(null);
@@ -182,6 +184,8 @@ const DashboardContent = ({ token, userData }) => {
     setBalance(data.balance); 
     setTotalDebitMeta(data.total_debit || 0);
     setTotalCreditMeta(data.total_credit || 0);
+    setRulajDebitMeta(data.rulaj_debit || 0);
+    setRulajCreditMeta(data.rulaj_credit || 0);
   }, [token]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -216,14 +220,8 @@ const DashboardContent = ({ token, userData }) => {
     return transactions.filter(t => t.date_iso >= startIso);
   }, [dateFilter, transactions]);
 
-  const displayTotals = useMemo(() => {
-    let inc = 0, exp = 0;
-    filteredTransactions.forEach(t => {
-      if (t.type === 'credit') inc += t.amount;
-      else if (t.type === 'debit') exp += t.amount;
-    });
-    return { inc, exp };
-  }, [filteredTransactions]);
+  // Am eliminat sumarul inc/exp calculat din filtrare, pentru că utilizatorul
+  // dorește afișarea „Rulaj zi” și „Total sume” exact ca în PDF.
 
   const chartData = useMemo(() => {
     const stats = {};
@@ -333,12 +331,12 @@ const DashboardContent = ({ token, userData }) => {
         </div>
         <div className="flex flex-col gap-4 min-w-0">
            <div className="grid grid-cols-2 gap-4 min-w-0">
-              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800 text-green-800 dark:text-green-400 font-bold">Total sume CREDIT {totalCreditMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
-              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800 text-red-800 dark:text-red-400 font-bold">Total sume DEBIT {totalDebitMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-800 text-indigo-800 dark:text-indigo-300 font-bold">Rulaj zi CREDIT {rulajCreditMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-2xl border border-purple-100 dark:border-purple-800 text-purple-800 dark:text-purple-300 font-bold">Rulaj zi DEBIT {rulajDebitMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
            </div>
            <div className="grid grid-cols-2 gap-4 min-w-0">
-              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800 text-green-800 dark:text-green-400 font-bold">+{displayTotals.inc.toLocaleString()} Lei</div>
-              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800 text-red-800 dark:text-red-400 font-bold">-{displayTotals.exp.toLocaleString()} Lei</div>
+              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800 text-green-800 dark:text-green-400 font-bold">Total sume CREDIT {totalCreditMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
+              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-2xl border border-red-100 dark:border-red-800 text-red-800 dark:text-red-400 font-bold">Total sume DEBIT {totalDebitMeta.toLocaleString('ro-RO', {minimumFractionDigits: 2})} Lei</div>
            </div>
            
            <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 flex-1 flex flex-col">
